@@ -47,12 +47,8 @@ class ControllerBase
   # pass the rendered html to render_content
   def render(template_name)
       template = File.read("views/#{self.class.name.underscore}/#{template_name.to_s}.html.erb")
-
-      if @already_built_response
-        raise
-      end
-      @already_built_response = true
-      # render_content(template,'text/html')
+      erb_temp = ERB.new(template).result(binding)
+      render_content(erb_temp,'text/html')
 
   end
 
