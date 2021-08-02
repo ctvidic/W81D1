@@ -23,6 +23,7 @@ class ControllerBase
   def redirect_to(url)
       @res.status=302
       @res['location']=url
+      @session.store_session(@res)
       if @already_built_response
         raise
       end
@@ -34,6 +35,7 @@ class ControllerBase
   # Raise an error if the developer tries to double render.
   def render_content(content, content_type)
       @res['Content-Type'] = content_type
+      @session.store_session(@res)
       @res.write(content)
       if @already_built_response
         raise
@@ -47,17 +49,14 @@ class ControllerBase
   # pass the rendered html to render_content
   def render(template_name)
       template = File.read("views/#{self.class.name.underscore}/#{template_name.to_s}.html.erb")
-
-      if @already_built_response
-        raise
-      end
-      @already_built_response = true
-      # render_content(template,'text/html')
+      erb_temp = ERB.new(template).result(binding)
+      render_content(erb_temp,'text/html')
 
   end
 
   # method exposing a `Session` object
   def session
+    @session ||= Session.new(@req)
   end
 
   # use this with the router to call action_name (:index, :show, :create...)
